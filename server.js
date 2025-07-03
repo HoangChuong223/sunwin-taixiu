@@ -4,9 +4,9 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors());
-const PORT = process.env.PORT || 8888;
+const PORT = process.env.PORT || 5000;
 
-let currentData = { id_phien: null, ket_qua: "" };
+let currentData = { id: "binhtool90", id_phien: null, ket_qua: "" };
 let id_phien_chua_co_kq = null;
 
 let ws = null;
@@ -33,21 +33,25 @@ function connectWebSocket() {
 
   ws.on('open', () => {
     console.log('[✅] WebSocket kết nối');
-
     messagesToSend.forEach((msg, i) => {
       setTimeout(() => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify(msg));
+        } else {
+          console.log('[⛔] Không gửi được vì WebSocket chưa mở');
         }
-      }, i * 400);
+      }, i * 600);
     });
 
-    // Ping giữ kết nối
     pingInterval = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.ping();
       }
-    }, 20000);
+    }, 15000);
+  });
+
+  ws.on('pong', () => {
+    console.log('[📶] Nhận phản hồi ping từ server');
   });
 
   ws.on('message', (message) => {
@@ -66,6 +70,7 @@ function connectWebSocket() {
           const text = `${d1}-${d2}-${d3} = ${total} (${result})`;
 
           currentData = {
+            id: "binhtool90",
             id_phien: id_phien_chua_co_kq,
             ket_qua: text
           };
@@ -92,7 +97,7 @@ function connectWebSocket() {
   });
 }
 
-// API endpoints
+// API
 app.get('/taixiu', (req, res) => {
   res.json(currentData);
 });
@@ -101,7 +106,6 @@ app.get('/', (req, res) => {
   res.send(`<h2>🎯 Kết quả Sunwin Tài Xỉu</h2><p>👉 <a href="/taixiu">Xem JSON</a></p>`);
 });
 
-// Bắt đầu server
 app.listen(PORT, () => {
   console.log(`[🌐] Server đang chạy tại http://localhost:${PORT}`);
   connectWebSocket();
