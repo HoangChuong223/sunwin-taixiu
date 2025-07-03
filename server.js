@@ -26,13 +26,8 @@ const messagesToSend = [
 function connectWebSocket() {
   ws = new WebSocket("wss://websocket.azhkthg1.net/websocket?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhbW91bnQiOjB9.p56b5g73I9wyoVu4db679bOvVeFJWVjGDg_ulBXyav8", {
     headers: {
-     Host": "websocket.azhkthg1.net",
-                    "Origin": "https://play.sun.win",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0",
-                    "Accept-Encoding": "gzip, deflate, br, zstd",
-                    "Accept-Language": "en-US,en;q=0.9",
-                    "Pragma": "no-cache",
-                    "Cache-Control": "no-cache"
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0",
+      "Origin": "https://play.sun.win"
     }
   });
 
@@ -90,10 +85,10 @@ function connectWebSocket() {
   });
 
   ws.on('close', () => {
-    console.log('[🔌] WebSocket đóng. Kết nối lại sau 3s...');
+    console.log('[🔌] WebSocket đóng. Kết nối lại sau 2s...');
     clearInterval(pingInterval);
     if (!isManuallyClosed) {
-      reconnectTimeout = setTimeout(connectWebSocket, 3000);
+      reconnectTimeout = setTimeout(connectWebSocket, 2500);
     }
   });
 
