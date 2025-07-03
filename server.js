@@ -6,9 +6,15 @@ const app = express();
 app.use(cors());
 const PORT = process.env.PORT || 8888;
 
-let currentData = { id_phien: null, ket_qua: "", id: binhtool90 };
+// Dữ liệu lưu phiên và kết quả
+let currentData = {
+  id: "binhtool90",       // Thêm ID cố định ở đây
+  id_phien: null,
+  ket_qua: ""
+};
 let id_phien_chua_co_kq = null;
 
+// Các gói tin cần gửi khi kết nối WebSocket
 const messagesToSend = [
   [1, "MiniGame", "SC_anh231009", "231009", {
     "info": "{\"ipAddress\":\"116.110.43.11\",\"userId\":\"11fddc91-f4fe-4c79-bfa6-1239045b4304\",\"username\":\"SC_anh231009\",\"timestamp\":1750056017406,\"refreshToken\":\"87545aa8905841f490cbfe598a094b02.3a9655ef18e14b62ad6a2491fcdfe27f\"}",
@@ -21,6 +27,7 @@ const messagesToSend = [
 let ws;
 let pingInterval = null;
 
+// Hàm kết nối WebSocket
 function connectWebSocket() {
   ws = new WebSocket("wss://websocket.azhkthg1.net/websocket?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhbW91bnQiOjB9.p56b5g73I9wyoVu4db679bOvVeFJWVjGDg_ulBXyav8", {
     headers: {
@@ -49,6 +56,7 @@ function connectWebSocket() {
       const data = JSON.parse(message);
       if (Array.isArray(data) && typeof data[1] === 'object') {
         const cmd = data[1].cmd;
+
         if (cmd === 1008 && data[1].sid) {
           id_phien_chua_co_kq = data[1].sid;
         }
@@ -60,6 +68,7 @@ function connectWebSocket() {
           const text = `${d1}-${d2}-${d3} = ${total} (${result})`;
 
           currentData = {
+            id: "binhtool90",
             id_phien: id_phien_chua_co_kq,
             ket_qua: text
           };
@@ -84,6 +93,7 @@ function connectWebSocket() {
   });
 }
 
+// API client truy cập dữ liệu
 app.get('/taixiu', (req, res) => {
   res.json(currentData);
 });
@@ -92,6 +102,7 @@ app.get('/', (req, res) => {
   res.send(`<h2>🎯 Kết quả Sunwin Tài Xỉu</h2><p>👉 <a href="/taixiu">Xem JSON</a></p>`);
 });
 
+// Khởi động server + kết nối WebSocket
 app.listen(PORT, () => {
   console.log(`[🌐] Server đang chạy tại http://localhost:${PORT}`);
   connectWebSocket();
