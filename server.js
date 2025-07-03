@@ -6,15 +6,14 @@ const app = express();
 app.use(cors());
 const PORT = process.env.PORT || 8888;
 
-// Dữ liệu lưu phiên và kết quả
-let currentData = {
-  id: "binhtool90",       // Thêm ID cố định ở đây
-  id_phien: null,
-  ket_qua: ""
-};
+let currentData = { id_phien: null, ket_qua: "" };
 let id_phien_chua_co_kq = null;
 
-// Các gói tin cần gửi khi kết nối WebSocket
+let ws = null;
+let pingInterval = null;
+let reconnectTimeout = null;
+let isManuallyClosed = false;
+
 const messagesToSend = [
   [1, "MiniGame", "SC_anh231009", "231009", {
     "info": "{\"ipAddress\":\"116.110.43.11\",\"userId\":\"11fddc91-f4fe-4c79-bfa6-1239045b4304\",\"username\":\"SC_anh231009\",\"timestamp\":1750056017406,\"refreshToken\":\"87545aa8905841f490cbfe598a094b02.3a9655ef18e14b62ad6a2491fcdfe27f\"}",
@@ -24,31 +23,31 @@ const messagesToSend = [
   [6, "MiniGame", "lobbyPlugin", { cmd: 10001 }]
 ];
 
-let ws;
-let pingInterval = null;
-
-// Hàm kết nối WebSocket
 function connectWebSocket() {
   ws = new WebSocket("wss://websocket.azhkthg1.net/websocket?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhbW91bnQiOjB9.p56b5g73I9wyoVu4db679bOvVeFJWVjGDg_ulBXyav8", {
     headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+      "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-G973F Build/QP1A.190711.020)",
       "Origin": "https://play.sun.win"
     }
   });
 
   ws.on('open', () => {
     console.log('[✅] WebSocket kết nối');
+
     messagesToSend.forEach((msg, i) => {
       setTimeout(() => {
-        ws.send(JSON.stringify(msg));
-      }, i * 500);
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(msg));
+        }
+      }, i * 400);
     });
 
+    // Ping giữ kết nối
     pingInterval = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.ping();
       }
-    }, 15000);
+    }, 20000);
   });
 
   ws.on('message', (message) => {
@@ -56,7 +55,6 @@ function connectWebSocket() {
       const data = JSON.parse(message);
       if (Array.isArray(data) && typeof data[1] === 'object') {
         const cmd = data[1].cmd;
-
         if (cmd === 1008 && data[1].sid) {
           id_phien_chua_co_kq = data[1].sid;
         }
@@ -68,7 +66,6 @@ function connectWebSocket() {
           const text = `${d1}-${d2}-${d3} = ${total} (${result})`;
 
           currentData = {
-            id: "binhtool90",
             id_phien: id_phien_chua_co_kq,
             ket_qua: text
           };
@@ -83,9 +80,11 @@ function connectWebSocket() {
   });
 
   ws.on('close', () => {
-    console.log('[🔌] WebSocket ngắt. Kết nối lại sau 1s...');
+    console.log('[🔌] WebSocket đóng. Kết nối lại sau 3s...');
     clearInterval(pingInterval);
-    setTimeout(connectWebSocket, 1000);
+    if (!isManuallyClosed) {
+      reconnectTimeout = setTimeout(connectWebSocket, 3000);
+    }
   });
 
   ws.on('error', (err) => {
@@ -93,7 +92,7 @@ function connectWebSocket() {
   });
 }
 
-// API client truy cập dữ liệu
+// API endpoints
 app.get('/taixiu', (req, res) => {
   res.json(currentData);
 });
@@ -102,7 +101,7 @@ app.get('/', (req, res) => {
   res.send(`<h2>🎯 Kết quả Sunwin Tài Xỉu</h2><p>👉 <a href="/taixiu">Xem JSON</a></p>`);
 });
 
-// Khởi động server + kết nối WebSocket
+// Bắt đầu server
 app.listen(PORT, () => {
   console.log(`[🌐] Server đang chạy tại http://localhost:${PORT}`);
   connectWebSocket();
