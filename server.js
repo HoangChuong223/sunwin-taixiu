@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 const PORT = process.env.PORT || 8888;
 
-let currentData = { id_phien: null, ket_qua: "" };
+let currentData = { id_phien: null, ket_qua: "", id: binhtool90 };
 let id_phien_chua_co_kq = null;
 
 const messagesToSend = [
