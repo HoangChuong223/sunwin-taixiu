@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 const PORT = process.env.PORT || 5000;
 
-let currentData = { id: "SC_bottxabcdxyz", id_phien: null, ket_qua: "" };
+let currentData = { id: "binhtool90", id_phien: null, ket_qua: "" };
 let id_phien_chua_co_kq = null;
 
 let ws = null;
@@ -15,9 +15,9 @@ let reconnectTimeout = null;
 let isManuallyClosed = false;
 
 const messagesToSend = [
-  [1, "MiniGame", "SC_bottxabcdxyz", "bottxabcdxyz", {
-    "info": "{\"ipAddress\":\"171.236.49.159\",\"userId\":\"cc177754-d16b-400e-b81f-87a8fc6ad236\",\"username\":\"SC_bottxabcdxyz\",\"timestamp\":1751448639234,\"refreshToken\":\"750a2e9146904153996a71c317f149aa.99034c981a764d789fd7518be0574554\"}",
-    "signature": "3331965A68D24B7FFD8754F1271B977EA167C16E6EA9D545F17513543B9BA4B10232D30C759C8ABA0EA7F4798681CBCDFD3E0E71E25828FFD6829A6EFDA24B2F5343172683A1C8D94E2889EFAAC9384F4C54F0E855AF577BCB79AFF925ABAB60E3A1557A261A9AD4B6EC079BC3BE843DC13D0BDF66381B6A648954415B8400FD"
+  [1, "MiniGame", "SC_apisunwin123", "binhlamtool90", {
+    "info": "{\"ipAddress\":\"2a09:bac1:7aa0:10::2e5:4d\",\"userId\":\"d93d3d84-f069-4b3f-8dac-b4716a812143\",\"username\":\"SC_apisunwin123\",\"timestamp\":1752045925640,\"refreshToken\":\"dd38d05401bb48b4ac3c2f6dc37f36d9.f22dccad89bb4e039814b7de64b05d63\"}",
+    "signature": "6FAD7CF6196AFBF0380BC69B59B653A05153D3D0E4E9A07BA43890CC3FB665B92C2E09E5B34B31FD8D74BDCB3B03A29255C5A5C7DFB426A8D391836CF9DCB7E5CEA743FE07521075DED70EFEC7F78C8993BDBF8626D58D3E68D36832CA4823F516B7E41DB353EA79290367D34DF98381089E69EA7C67FB3588B39C9C4D7174B2"
   }],
   [6, "MiniGame", "taixiuPlugin", { cmd: 1005 }],
   [6, "MiniGame", "lobbyPlugin", { cmd: 10001 }]
@@ -70,7 +70,7 @@ function connectWebSocket() {
           const text = `${d1}-${d2}-${d3} = ${total} (${result})`;
 
           currentData = {
-            id: "SC_bottxabcdxyz",
+            id: "binhtool90",
             id_phien: id_phien_chua_co_kq,
             ket_qua: text
           };
