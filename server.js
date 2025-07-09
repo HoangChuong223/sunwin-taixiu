@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 const PORT = process.env.PORT || 5000;
 
-let currentData = { id: "binhtool90", id_phien: null, ket_qua: "" };
+let currentData = { id: "SC_bottxabcdxyz", id_phien: null, ket_qua: "" };
 let id_phien_chua_co_kq = null;
 
 let ws = null;
@@ -15,10 +15,9 @@ let reconnectTimeout = null;
 let isManuallyClosed = false;
 
 const messagesToSend = [
-  [1, "MiniGame", "SC_bottxabcdxyz", "binhtool90", {
+  [1, "MiniGame", "SC_bottxabcdxyz", "bottxabcdxyz", {
     "info": "{\"ipAddress\":\"171.236.49.159\",\"userId\":\"cc177754-d16b-400e-b81f-87a8fc6ad236\",\"username\":\"SC_bottxabcdxyz\",\"timestamp\":1751448639234,\"refreshToken\":\"750a2e9146904153996a71c317f149aa.99034c981a764d789fd7518be0574554\"}",
     "signature": "3331965A68D24B7FFD8754F1271B977EA167C16E6EA9D545F17513543B9BA4B10232D30C759C8ABA0EA7F4798681CBCDFD3E0E71E25828FFD6829A6EFDA24B2F5343172683A1C8D94E2889EFAAC9384F4C54F0E855AF577BCB79AFF925ABAB60E3A1557A261A9AD4B6EC079BC3BE843DC13D0BDF66381B6A648954415B8400FD"
-"
   }],
   [6, "MiniGame", "taixiuPlugin", { cmd: 1005 }],
   [6, "MiniGame", "lobbyPlugin", { cmd: 10001 }]
@@ -71,7 +70,7 @@ function connectWebSocket() {
           const text = `${d1}-${d2}-${d3} = ${total} (${result})`;
 
           currentData = {
-            id: "binhtool90",
+            id: "SC_bottxabcdxyz",
             id_phien: id_phien_chua_co_kq,
             ket_qua: text
           };
