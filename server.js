@@ -6,14 +6,18 @@ const app = express();
 app.use(cors());
 const PORT = process.env.PORT || 5000;
 
-let currentData = { id: "binhtool90", id_phien: null, ket_qua: "" };
+// === Biến lưu trạng thái ===
+let currentData = {
+  id: "binhtool90",
+  id_phien: null,
+  ket_qua: "",
+  pattern: "",
+  du_doan: "?"
+};
 let id_phien_chua_co_kq = null;
+let patternHistory = []; // Lưu dãy T/X gần nhất
 
-let ws = null;
-let pingInterval = null;
-let reconnectTimeout = null;
-let isManuallyClosed = false;
-
+// === Danh sách tin nhắn gửi lên server WebSocket ===
 const messagesToSend = [
   [1, "MiniGame", "SC_apisunwin123", "binhlamtool90", {
     "info": "{\"ipAddress\":\"2a09:bac1:7aa0:10::2e5:4d\",\"userId\":\"d93d3d84-f069-4b3f-8dac-b4716a812143\",\"username\":\"SC_apisunwin123\",\"timestamp\":1752045925640,\"refreshToken\":\"dd38d05401bb48b4ac3c2f6dc37f36d9.f22dccad89bb4e039814b7de64b05d63\"}",
@@ -23,10 +27,33 @@ const messagesToSend = [
   [6, "MiniGame", "lobbyPlugin", { cmd: 10001 }]
 ];
 
+// === WebSocket ===
+let ws = null;
+let pingInterval = null;
+let reconnectTimeout = null;
+let isManuallyClosed = false;
+
+function duDoanTiepTheo(pattern) {
+  if (pattern.length < 6) return "?";
+
+  const last3 = pattern.slice(-3).join('');
+  const last4 = pattern.slice(-4).join('');
+
+  // Kiểm tra nếu 3 ký tự cuối lặp (vd: TXT → TXT)
+  const count = pattern.join('').split(last3).length - 1;
+  if (count >= 2) return last3[0]; // đoán tiếp theo là chữ đầu chuỗi
+
+  // Nếu thấy lặp 2 lần gần đây
+  const count4 = pattern.join('').split(last4).length - 1;
+  if (count4 >= 2) return last4[0];
+
+  return "?";
+}
+
 function connectWebSocket() {
   ws = new WebSocket("wss://websocket.azhkthg1.net/websocket?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhbW91bnQiOjAsInVzZXJuYW1lIjoiU0NfYXBpc3Vud2luMTIzIn0.hgrRbSV6vnBwJMg9ZFtbx3rRu9mX_hZMZ_m5gMNhkw0", {
     headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0",
+      "User-Agent": "Mozilla/5.0",
       "Origin": "https://play.sun.win"
     }
   });
@@ -37,8 +64,6 @@ function connectWebSocket() {
       setTimeout(() => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify(msg));
-        } else {
-          console.log('[⛔] Không gửi được vì WebSocket chưa mở');
         }
       }, i * 600);
     });
@@ -51,7 +76,7 @@ function connectWebSocket() {
   });
 
   ws.on('pong', () => {
-    console.log('[📶] Nhận phản hồi ping từ server');
+    console.log('[📶] Ping OK');
   });
 
   ws.on('message', (message) => {
@@ -59,6 +84,7 @@ function connectWebSocket() {
       const data = JSON.parse(message);
       if (Array.isArray(data) && typeof data[1] === 'object') {
         const cmd = data[1].cmd;
+
         if (cmd === 1008 && data[1].sid) {
           id_phien_chua_co_kq = data[1].sid;
         }
@@ -66,26 +92,36 @@ function connectWebSocket() {
         if (cmd === 1003 && data[1].gBB) {
           const { d1, d2, d3 } = data[1];
           const total = d1 + d2 + d3;
-          const result = total > 10 ? "Tài" : "Xỉu";
-          const text = `${d1}-${d2}-${d3} = ${total} (${result})`;
+          const result = total > 10 ? "T" : "X"; // Tài / Xỉu
+
+          // Lưu pattern
+          patternHistory.push(result);
+          if (patternHistory.length > 20) patternHistory.shift();
+
+          const text = `${d1}-${d2}-${d3} = ${total} (${result === 'T' ? 'Tài' : 'Xỉu'})`;
+
+          // Dự đoán
+          const du_doan = duDoanTiepTheo(patternHistory);
 
           currentData = {
             id: "binhtool90",
             id_phien: id_phien_chua_co_kq,
-            ket_qua: text
+            ket_qua: text,
+            pattern: patternHistory.join(''),
+            du_doan: du_doan === "T" ? "Tài" : du_doan === "X" ? "Xỉu" : "?"
           };
 
-          console.log(`Phiên: ${id_phien_chua_co_kq} → ${text}`);
+          console.log(`Phiên ${id_phien_chua_co_kq}: ${text} → Dự đoán tiếp: ${currentData.du_doan}`);
           id_phien_chua_co_kq = null;
         }
       }
     } catch (e) {
-      console.error('[Lỗi xử lý dữ liệu]:', e.message);
+      console.error('[Lỗi]:', e.message);
     }
   });
 
   ws.on('close', () => {
-    console.log('[🔌] WebSocket đóng. Kết nối lại sau 2s...');
+    console.log('[🔌] WebSocket ngắt. Đang kết nối lại...');
     clearInterval(pingInterval);
     if (!isManuallyClosed) {
       reconnectTimeout = setTimeout(connectWebSocket, 2500);
@@ -97,16 +133,17 @@ function connectWebSocket() {
   });
 }
 
-// API
+// === API ===
 app.get('/taixiu', (req, res) => {
   res.json(currentData);
 });
 
 app.get('/', (req, res) => {
-  res.send(`<h2>🎯 Kết quả Sunwin Tài Xỉu</h2><p>👉 <a href="/taixiu">Xem JSON</a></p>`);
+  res.send(`<h2>🎯 Kết quả Sunwin Tài Xỉu</h2><p><a href="/taixiu">Xem kết quả JSON</a></p>`);
 });
 
+// === Khởi động server ===
 app.listen(PORT, () => {
-  console.log(`[🌐] Server đang chạy tại http://localhost:${PORT}`);
+  console.log(`[🌐] Server chạy tại http://localhost:${PORT}`);
   connectWebSocket();
 });
